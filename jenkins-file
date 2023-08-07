@@ -1,0 +1,38 @@
+pipeline {
+  agent any
+  
+  options {
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+  }
+  
+  environment {
+    SONARQUBE_INSTALLATION = 'sonar'
+  }
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        // Cloner le dépôt GitHub et basculer sur la branche 'main'
+        git 'https://github.com/Zaghdoudii/student-springBoot.git'
+        bat 'git checkout main' 
+      }
+    }
+    
+    stage('Build') {
+      steps {
+        bat 'mvn clean package'
+      }
+    }
+    
+    stage('SonarQube Analysis') {
+      steps {
+        // Utilisation de l'environnement SonarQube configuré plus haut
+        withSonarQubeEnv(installationName: "${env.SONARQUBE_INSTALLATION}") {
+          // Exécutez le scanner SonarQube pour analyser le code source
+          bat 'mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.9.0.2155:sonar'
+        }
+      }
+    }
+  }
+  
+}
